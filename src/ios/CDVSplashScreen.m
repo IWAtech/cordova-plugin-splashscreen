@@ -6,9 +6,9 @@
  to you under the Apache License, Version 2.0 (the
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
-
+ 
  http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  Unless required by applicable law or agreed to in writing,
  software distributed under the License is distributed on an
  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -30,7 +30,7 @@
 - (void)pluginInitialize
 {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pageDidLoad) name:CDVPageDidLoadNotification object:self.webView];
-
+    
     [self setVisible:YES];
 }
 
@@ -47,10 +47,10 @@
 - (void)pageDidLoad
 {
     id autoHideSplashScreenValue = [self.commandDelegate.settings objectForKey:[@"AutoHideSplashScreen" lowercaseString]];
-
+    
     // if value is missing, default to yes
     if ((autoHideSplashScreenValue == nil) || [autoHideSplashScreenValue boolValue]) {
-        [self setVisible:NO];
+        [self performSelector:@selector(ChangeImage:) withObject:[NSNumber numberWithBool:false] afterDelay:_temdata];
     }
 }
 
@@ -69,19 +69,19 @@
      *     gray       = UIActivityIndicatorViewStyleGray
      *
      */
-
+    
     // Determine whether rotation should be enabled for this device
     // Per iOS HIG, landscape is only supported on iPad and iPhone 6+
     CDV_iOSDevice device = [self getCurrentDevice];
     BOOL autorotateValue = (device.iPad || device.iPhone6Plus) ?
-        [(CDVViewController *)self.viewController shouldAutorotateDefaultValue] :
-        NO;
+    [(CDVViewController *)self.viewController shouldAutorotateDefaultValue] :
+    NO;
     
     [(CDVViewController *)self.viewController setEnabledAutorotation:autorotateValue];
-
+    
     NSString* topActivityIndicator = [self.commandDelegate.settings objectForKey:[@"TopActivityIndicator" lowercaseString]];
     UIActivityIndicatorViewStyle topActivityIndicatorStyle = UIActivityIndicatorViewStyleGray;
-
+    
     if ([topActivityIndicator isEqualToString:@"whiteLarge"]) {
         topActivityIndicatorStyle = UIActivityIndicatorViewStyleWhiteLarge;
     } else if ([topActivityIndicator isEqualToString:@"white"]) {
@@ -89,46 +89,52 @@
     } else if ([topActivityIndicator isEqualToString:@"gray"]) {
         topActivityIndicatorStyle = UIActivityIndicatorViewStyleGray;
     }
-
+    
     UIView* parentView = self.viewController.view;
     parentView.userInteractionEnabled = NO;  // disable user interaction while splashscreen is shown
     _activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:topActivityIndicatorStyle];
-    _activityView.center = CGPointMake(parentView.bounds.size.width / 2, parentView.bounds.size.height / 2);
+    _activityView.center = CGPointMake(parentView.bounds.size.width / 2, parentView.bounds.size.height / 1.2);
     _activityView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin
-        | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
+    | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
     [_activityView startAnimating];
-
+    
     // Set the frame & image later.
     _imageView = [[UIImageView alloc] init];
+    _bgImgView=[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)];
+    [parentView addSubview:_bgImgView];
+    
     [parentView addSubview:_imageView];
-
-    id showSplashScreenSpinnerValue = [self.commandDelegate.settings objectForKey:[@"ShowSplashScreenSpinner" lowercaseString]];
-    // backwards compatibility - if key is missing, default to true
-    if ((showSplashScreenSpinnerValue == nil) || [showSplashScreenSpinnerValue boolValue]) {
-        [parentView addSubview:_activityView];
-    }
-
+    
+    /*CGSize screenSize = [self.viewController.view convertRect:[UIScreen mainScreen].bounds fromView:nil].size;
+     
+     UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15, screenSize.height/2, screenSize.width, 30)];
+     label.text = @"Powered by";
+     [label setFont:[UIFont boldSystemFontOfSize:16]];
+     [parentView addSubview:label];
+     */
+    
     // Frame is required when launching in portrait mode.
     // Bounds for landscape since it captures the rotation.
     [parentView addObserver:self forKeyPath:@"frame" options:0 context:nil];
     [parentView addObserver:self forKeyPath:@"bounds" options:0 context:nil];
-
+    
     [self updateImage];
 }
 
 - (void)destroyViews
 {
     [(CDVViewController *)self.viewController setEnabledAutorotation:[(CDVViewController *)self.viewController shouldAutorotateDefaultValue]];
-
+    
     [_imageView removeFromSuperview];
+    [_bgImgView removeFromSuperview];
     [_activityView removeFromSuperview];
     _imageView = nil;
     _activityView = nil;
     _curImageName = nil;
-
+    
     self.viewController.view.userInteractionEnabled = YES;  // re-enable user interaction upon completion
-    [self.viewController.view removeObserver:self forKeyPath:@"frame"];
-    [self.viewController.view removeObserver:self forKeyPath:@"bounds"];
+    //[self.viewController.view removeObserver:self forKeyPath:@"frame"];
+    //[self.viewController.view removeObserver:self forKeyPath:@"bounds"];
 }
 
 - (CDV_iOSDevice) getCurrentDevice
@@ -184,14 +190,14 @@
             switch (currentOrientation) {
                 case UIInterfaceOrientationLandscapeLeft:
                 case UIInterfaceOrientationLandscapeRight:
-                        imageName = [imageName stringByAppendingString:@"-Landscape"];
+                    imageName = [imageName stringByAppendingString:@"-Landscape"];
                     break;
                 default:
                     break;
             }
         }
         imageName = [imageName stringByAppendingString:@"-736h"];
-
+        
     } else if (device.iPad) { // supports landscape
         if (isOrientationLocked) {
             imageName = [imageName stringByAppendingString:(supportsLandscape ? @"-Landscape" : @"-Portrait")];
@@ -217,31 +223,64 @@
 // Sets the view's frame and image.
 - (void)updateImage
 {
-    NSString* imageName = [self getImageName:[[UIApplication sharedApplication] statusBarOrientation] delegate:(id<CDVScreenOrientationDelegate>)self.viewController device:[self getCurrentDevice]];
-
-    if (![imageName isEqualToString:_curImageName]) {
-        UIImage* img = [UIImage imageNamed:imageName];
+    
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    documentsDirectory = [documentsDirectory stringByAppendingPathComponent:@""];
+    NSLog(@"do ==%@",documentsDirectory);
+    
+    NSString *URLImg = [documentsDirectory stringByAppendingPathComponent:@"organization_splash.png"];
+    
+    NSLog(@"==%@",URLImg);
+    
+    // Fallback to Default Splashscreen
+    if (![URLImg isEqualToString:_curImageName]) {
+        UIImage* img = [UIImage imageNamed:URLImg];
         _imageView.image = img;
-        _curImageName = imageName;
+        _curImageName = URLImg;
+        fallbackToDefaultSplash = TRUE;
+    } else {
+        fallbackToDefaultSplash = FALSE;
     }
-
+    
+    id showSplashScreenSpinnerValue = [self.commandDelegate.settings objectForKey:[@"ShowSplashScreenSpinner" lowercaseString]];
+    // backwards compatibility - if key is missing, default to true
+    if ((showSplashScreenSpinnerValue == nil) || [showSplashScreenSpinnerValue boolValue]) {
+        [self.viewController.view addSubview:_activityView];
+    }
+    
     // Check that splash screen's image exists before updating bounds
     if (_imageView.image) {
         [self updateBounds];
     } else {
-        NSLog(@"WARNING: The splashscreen image named %@ was not found", imageName);
+        
+        NSString* imageName = [self getImageName:[[UIApplication sharedApplication] statusBarOrientation] delegate:(id<CDVScreenOrientationDelegate>)self.viewController device:[self getCurrentDevice]];
+        if (![imageName isEqualToString:_curImageName]) {
+            UIImage* img = [UIImage imageNamed:imageName];
+            _imageView.image = img;
+            _curImageName = imageName;
+        }
+        
+        if (_imageView.image) {
+            [self updateBounds];
+        }
+        else
+        {
+            NSLog(@"WARNING: The splashscreen image named %@ was not found", imageName);
+        }
     }
+    
 }
 
 - (void)updateBounds
 {
     UIImage* img = _imageView.image;
     CGRect imgBounds = (img) ? CGRectMake(0, 0, img.size.width, img.size.height) : CGRectZero;
-
+    
     CGSize screenSize = [self.viewController.view convertRect:[UIScreen mainScreen].bounds fromView:nil].size;
     UIInterfaceOrientation orientation = self.viewController.interfaceOrientation;
     CGAffineTransform imgTransform = CGAffineTransformIdentity;
-
+    
     /* If and only if an iPhone application is landscape-only as per
      * UISupportedInterfaceOrientations, the view controller's orientation is
      * landscape. In this case the image must be rotated in order to appear
@@ -252,7 +291,7 @@
         imgTransform = CGAffineTransformMakeRotation(M_PI / 2);
         imgBounds.size = CGSizeMake(imgBounds.size.height, imgBounds.size.width);
     }
-
+    
     // There's a special case when the image is the size of the screen.
     if (CGSizeEqualToSize(screenSize, imgBounds.size)) {
         CGRect statusFrame = [self.viewController.view convertRect:[UIApplication sharedApplication].statusBarFrame fromView:nil];
@@ -273,9 +312,30 @@
         imgBounds.size.height *= ratio;
         imgBounds.size.width *= ratio;
     }
-
+    
+    int margin = 0;
+    int padding = 0;
+    
+    if(fallbackToDefaultSplash == FALSE) {
+        margin = 40;
+        padding = 20;
+    }
+    
+    if (img.size.width>screenSize.width||img.size.height>screenSize.height) {
+        _imageView.frame=CGRectMake(padding, 0, screenSize.width - margin, screenSize.height);
+    }else{
+        
+        
+        _imageView.frame=CGRectMake(padding/2, 0, img.size.width - margin, img.size.height);;
+        _imageView.center=self.viewController.view.center;
+    }
+    
     _imageView.transform = imgTransform;
-    _imageView.frame = imgBounds;
+    // _imageView.frame = imgBounds;
+    [_imageView setContentMode:UIViewContentModeScaleAspectFit
+     ];
+    NSLog(@"%@",NSStringFromCGRect(self.viewController.view.frame));
+    [_bgImgView setBackgroundColor:[UIColor colorWithRed:223.0/255.0 green:231.0/255.0 blue:235.0/255.0 alpha:1.0]];
 }
 
 - (void)setVisible:(BOOL)visible
@@ -284,47 +344,50 @@
         return;
     }
     _visible = visible;
-
+    
     id fadeSplashScreenValue = [self.commandDelegate.settings objectForKey:[@"FadeSplashScreen" lowercaseString]];
     id fadeSplashScreenDuration = [self.commandDelegate.settings objectForKey:[@"FadeSplashScreenDuration" lowercaseString]];
-
+    
     float fadeDuration = fadeSplashScreenDuration == nil ? kSplashScreenDurationDefault : [fadeSplashScreenDuration floatValue];
-
+    _temdata=fadeDuration;
     if ((fadeSplashScreenValue == nil) || ![fadeSplashScreenValue boolValue]) {
         fadeDuration = 0;
     }
-
+    
     // Never animate the showing of the splash screen.
     if (visible) {
         if (_imageView == nil) {
             [self createViews];
         }
     } else if (fadeDuration == 0) {
-        [self destroyViews];
+        [self performSelector:@selector(ChangeImage:) withObject:[NSNumber numberWithBool:false] afterDelay:_temdata];
     } else {
-      __weak __typeof(self) weakSelf = self;
-
-      [UIView transitionWithView:self.viewController.view
-                        duration:fadeDuration
-                         options:UIViewAnimationOptionTransitionNone
-                      animations:^(void) {
-                          __typeof(self) strongSelf = weakSelf;
-                          if (strongSelf != nil) {
-                              dispatch_async(dispatch_get_main_queue(), ^{
-                                      [strongSelf->_activityView setAlpha:0];
-                                      [strongSelf->_imageView setAlpha:0];
-                              });
-                          }
-                      }
-                      completion:^(BOOL finished) {
-                          if (finished) {
-                              dispatch_async(dispatch_get_main_queue(), ^{
-                                      [weakSelf destroyViews];
-                              });
-                          }
-                      }
-      ];      
+        __weak __typeof(self) weakSelf = self;
+        
+        [UIView transitionWithView:self.viewController.view
+                          duration:fadeDuration
+                           options:UIViewAnimationOptionTransitionNone
+                        animations:^(void) {
+                            __typeof(self) strongSelf = weakSelf;
+                            if (strongSelf != nil) {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [strongSelf->_activityView setAlpha:0];
+                                    [strongSelf->_imageView setAlpha:0];
+                                });
+                            }
+                        }
+                        completion:^(BOOL finished) {
+                            if (finished) {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [weakSelf destroyViews];
+                                });
+                            }
+                        }
+         ];
     }
+}
+-(void)ChangeImage:(id)sender{
+    [self destroyViews];
 }
 
 @end
