@@ -105,14 +105,6 @@
     
     [parentView addSubview:_imageView];
     
-    /*CGSize screenSize = [self.viewController.view convertRect:[UIScreen mainScreen].bounds fromView:nil].size;
-     
-     UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15, screenSize.height/2, screenSize.width, 30)];
-     label.text = @"Powered by";
-     [label setFont:[UIFont boldSystemFontOfSize:16]];
-     [parentView addSubview:label];
-     */
-    
     // Frame is required when launching in portrait mode.
     // Bounds for landscape since it captures the rotation.
     [parentView addObserver:self forKeyPath:@"frame" options:0 context:nil];
@@ -128,6 +120,8 @@
     [_imageView removeFromSuperview];
     [_bgImgView removeFromSuperview];
     [_activityView removeFromSuperview];
+    [_labelView removeFromSuperview];
+    
     _imageView = nil;
     _activityView = nil;
     _curImageName = nil;
@@ -319,14 +313,22 @@
     if(fallbackToDefaultSplash == FALSE) {
         margin = 40;
         padding = 20;
+        
+        CGSize screenSize = [self.viewController.view convertRect:[UIScreen mainScreen].bounds fromView:nil].size;
+        
+        _labelView = [[UILabel alloc]initWithFrame:CGRectMake(0, screenSize.height/2-img.size.height/2, screenSize.width, 30)];
+        _labelView.text = @"Updates powered by";
+        _labelView.textAlignment = NSTextAlignmentCenter;
+        _labelView.textColor = [UIColor colorWithRed:0.51f green:0.51f blue:0.51f alpha:0.75f];
+        [_labelView setFont:[UIFont systemFontOfSize:17]];
+        [self.viewController.view addSubview:_labelView];
+        
     }
     
     if (img.size.width>screenSize.width||img.size.height>screenSize.height) {
         _imageView.frame=CGRectMake(padding, 0, screenSize.width - margin, screenSize.height);
     }else{
-        
-        
-        _imageView.frame=CGRectMake(padding/2, 0, img.size.width - margin, img.size.height);;
+        _imageView.frame=CGRectMake(padding/2, 0, img.size.width - margin, img.size.height);
         _imageView.center=self.viewController.view.center;
     }
     

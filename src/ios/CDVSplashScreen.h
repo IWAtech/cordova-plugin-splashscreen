@@ -34,6 +34,7 @@ typedef struct {
     UIActivityIndicatorView* _activityView;
     UIImageView* _imageView;
     UIImageView *_bgImgView;
+    UILabel *_labelView;
     NSString* _curImageName;
     BOOL _visible;
     float _temdata;
