@@ -101,10 +101,11 @@
     // Set the frame & image later.
     _imageView = [[UIImageView alloc] init];
     _bgImgView=[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)];
+    _labelView = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 30)];
+    
     [parentView addSubview:_bgImgView];
-    
     [parentView addSubview:_imageView];
-    
+    [parentView addSubview:_labelView];
     // Frame is required when launching in portrait mode.
     // Bounds for landscape since it captures the rotation.
     [parentView addObserver:self forKeyPath:@"frame" options:0 context:nil];
@@ -307,33 +308,31 @@
         imgBounds.size.width *= ratio;
     }
     
-    int margin = 0;
-    int padding = 0;
+    _labelView.text = @"Updates powered by";
+    _labelView.textAlignment = NSTextAlignmentCenter;
+    _labelView.textColor = [UIColor colorWithRed:0.51f green:0.51f blue:0.51f alpha:0.75f];
+    _labelView.font = [UIFont systemFontOfSize:17];
     
     if(fallbackToDefaultSplash == FALSE) {
-        margin = 40;
-        padding = 20;
-        
-        CGSize screenSize = [self.viewController.view convertRect:[UIScreen mainScreen].bounds fromView:nil].size;
-        
-        _labelView = [[UILabel alloc]initWithFrame:CGRectMake(0, screenSize.height/2-img.size.height/2, screenSize.width, 30)];
-        _labelView.text = @"Updates powered by";
-        _labelView.textAlignment = NSTextAlignmentCenter;
-        _labelView.textColor = [UIColor colorWithRed:0.51f green:0.51f blue:0.51f alpha:0.75f];
-        [_labelView setFont:[UIFont systemFontOfSize:17]];
-        [self.viewController.view addSubview:_labelView];
-        
+        if(screenSize.width > screenSize.height) {
+            _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(6*(img.size.width/img.size.height))), screenSize.width, 30);
+            _imageView.frame=CGRectMake(screenSize.width/6, 0, screenSize.width/3, screenSize.height);
+        } else {
+            if(screenSize.width >= 1024) {
+                _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(4*(img.size.width/img.size.height))), screenSize.width, 30);
+                _imageView.frame=CGRectMake(screenSize.width/4, 0, screenSize.width/2, screenSize.height);
+                
+            } else {
+                _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(2.5*(img.size.width/img.size.height))), screenSize.width, 30);
+                _imageView.frame=CGRectMake(screenSize.width/2.5, 0, screenSize.width/1.25, screenSize.height);
+            }
+        }
+    } else {
+        _labelView.frame = CGRectMake(0, 0, 0, 0);
+        _imageView.frame=CGRectMake(0, 0, screenSize.width, screenSize.height);
     }
-    
-    if (img.size.width>screenSize.width||img.size.height>screenSize.height) {
-        _imageView.frame=CGRectMake(padding, 0, screenSize.width - margin, screenSize.height);
-    }else{
-        _imageView.frame=CGRectMake(padding/2, 0, img.size.width - margin, img.size.height);
-        _imageView.center=self.viewController.view.center;
-    }
-    
+    _imageView.center=self.viewController.view.center;
     _imageView.transform = imgTransform;
-    // _imageView.frame = imgBounds;
     [_imageView setContentMode:UIViewContentModeScaleAspectFit
      ];
     NSLog(@"%@",NSStringFromCGRect(self.viewController.view.frame));
