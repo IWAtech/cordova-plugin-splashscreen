@@ -296,6 +296,7 @@ public class SplashScreen extends CordovaPlugin {
                 logoView.setScaleType(ImageView.ScaleType.CENTER);
                 layoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, (float) 0.5);
                 logoView.setLayoutParams(layoutParams);
+                logoView.setBackgroundColor(0xFFe7ecf0);
 
                 // add a TextView for the Text
                 textView = new TextView(context);
