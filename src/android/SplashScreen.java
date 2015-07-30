@@ -19,6 +19,7 @@
 
 package org.apache.cordova.splashscreen;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -27,7 +28,10 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Handler;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -286,8 +290,21 @@ public class SplashScreen extends CordovaPlugin {
                 }
                 LayoutParams layoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, (float) 0.5);
                 splashImageView.setLayoutParams(layoutParams);
-                int padding = 15;
-                splashImageView.setPadding(padding, padding, padding, padding);
+
+                int width = 150; int height = 150;
+                if (android.os.Build.VERSION.SDK_INT >= 13) {
+                    Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
+                    Point size = new Point();
+                    display.getSize(size);
+
+                    // calculate padding percentage
+                    width = size.x;
+                    height = size.y;
+                }
+
+                int paddingSide = (int)Math.round(width * 0.1);
+                int paddingTop = (int)Math.round(height * 0.1);
+                splashImageView.setPadding(paddingSide, paddingTop, paddingSide, paddingTop);
                 splashImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
                 // ImageView for the logo - (our splashscreen)
