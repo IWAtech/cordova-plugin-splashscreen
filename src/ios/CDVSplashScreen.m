@@ -310,7 +310,7 @@
     
     _labelView.text = @"Updates powered by";
     _labelView.textAlignment = NSTextAlignmentCenter;
-    _labelView.textColor = [UIColor colorWithRed:0.51f green:0.51f blue:0.51f alpha:0.75f];
+    _labelView.textColor = [UIColor colorWithRed:0.42 green:0.42 blue:0.42 alpha:1.0];
     _labelView.font = [UIFont systemFontOfSize:17];
     
     if(fallbackToDefaultSplash == FALSE) {
