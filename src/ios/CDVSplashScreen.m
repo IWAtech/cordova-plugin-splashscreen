@@ -323,13 +323,15 @@
                 _imageView.frame=CGRectMake(screenSize.width/4, 0, screenSize.width/2, screenSize.height);
                 
             } else {
-                _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(2.5*(img.size.width/img.size.height))), screenSize.width, 30);
                 if(screenSize.width >= 768) {
                     // iPad
                     _imageView.frame=CGRectMake(screenSize.width/5, 0, screenSize.width/2.5, screenSize.height);
+                    _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(5*(img.size.width/img.size.height))), screenSize.width, 30);
                 } else {
                     // iPhone
                     _imageView.frame=CGRectMake(screenSize.width/2.5, 0, screenSize.width/1.25, screenSize.height);
+                    _labelView.frame = CGRectMake(0, screenSize.height/2 - 40 - (screenSize.width/(2.5*(img.size.width/img.size.height))), screenSize.width, 30);
+                    
                 }
             }
         }
