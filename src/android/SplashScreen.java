@@ -224,7 +224,7 @@ public class SplashScreen extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 if (splashDialog != null && splashDialog.isShowing()) {
-                    if(splashScreenContent) {
+                    if(splashScreenContent != null) {
                            AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
                            fadeOut.setDuration(800);
                            splashScreenContent.setAnimation(fadeOut);
