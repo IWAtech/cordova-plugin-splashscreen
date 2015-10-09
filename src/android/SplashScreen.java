@@ -224,30 +224,35 @@ public class SplashScreen extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 if (splashDialog != null && splashDialog.isShowing()) {
-
-                    AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
-                    fadeOut.setDuration(800);
-                    splashScreenContent.setAnimation(fadeOut);
-                    splashScreenContent.startAnimation(fadeOut);
-
-                    fadeOut.setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
+                    if(splashScreenContent) {
+                           AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
+                           fadeOut.setDuration(800);
+                           splashScreenContent.setAnimation(fadeOut);
+                           splashScreenContent.startAnimation(fadeOut);
+       
+                           fadeOut.setAnimationListener(new Animation.AnimationListener() {
+                               @Override
+                               public void onAnimationStart(Animation animation) {
+       
+                               }
+       
+                               @Override
+                               public void onAnimationEnd(Animation animation) {
+                                   splashDialog.dismiss();
+                                   splashDialog = null;
+                                   splashImageView = null;
+                               }
+       
+                               @Override
+                               public void onAnimationRepeat(Animation animation) {
+       
+                               }
+                           });
+                    } else {
                             splashDialog.dismiss();
                             splashDialog = null;
                             splashImageView = null;
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {
-
-                        }
-                    });
+                    }
                 }
             }
         });
