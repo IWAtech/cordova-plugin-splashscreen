@@ -310,8 +310,6 @@ public class SplashScreen extends CordovaPlugin {
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
-                // Get reference to display
-                Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
                 Context context = webView.getContext();
 
                 File imgFile = new File(context.getCacheDir().getAbsolutePath() + "/organization_splash.png");
