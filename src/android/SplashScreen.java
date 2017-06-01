@@ -224,13 +224,6 @@ public class SplashScreen extends CordovaPlugin {
         if (newConfig.orientation != orientation) {
             orientation = newConfig.orientation;
 
-            // Splash drawable may change with orientation, so reload it.
-//            if (splashImageView != null) {
-//                int drawableId = preferences.getInteger("SplashDrawableId", 0);
-//                if (drawableId != 0) {
-//                    splashImageView.setImageDrawable(cordova.getActivity().getResources().getDrawable(drawableId));
-//                }
-//            }
             if(textView != null) {
                 LayoutParams layoutParams = null;
                 if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -254,8 +247,8 @@ public class SplashScreen extends CordovaPlugin {
                         fadeOut.setInterpolator(new DecelerateInterpolator());
                         fadeOut.setDuration(fadeSplashScreenDuration);
 
-                        splashImageView.setAnimation(fadeOut);
-                        splashImageView.startAnimation(fadeOut);
+                        splashScreenContent.setAnimation(fadeOut);
+                        splashScreenContent.startAnimation(fadeOut);
 
                         fadeOut.setAnimationListener(new Animation.AnimationListener() {
                             @Override
@@ -268,7 +261,9 @@ public class SplashScreen extends CordovaPlugin {
                                 if (splashDialog != null && splashDialog.isShowing()) {
                                     splashDialog.dismiss();
                                     splashDialog = null;
+                                    splashScreenContent = null;
                                     splashImageView = null;
+                                    textView = null;
                                 }
                             }
 
@@ -280,7 +275,9 @@ public class SplashScreen extends CordovaPlugin {
                         spinnerStop();
                         splashDialog.dismiss();
                         splashDialog = null;
+                        splashScreenContent = null;
                         splashImageView = null;
+                        textView = null;
                     }
                 }
             }
